@@ -8,9 +8,12 @@ This work has been accepted to [ECCB2020](https://eccb2020.info/)([slides](https
  DeepCDR is a hybrid graph convolutional network for cancer drug response prediction. It takes both multi-omics data of cancer cell lines and drug structure as inputs and predicts the drug sensitivity (binary or contineous IC50 value). 
  
  # Requirements
+- python 2.7
 - Keras==2.1.4
 - TensorFlow==1.13.1
 - hickle >= 2.1.0
+- scikit-learn==0.20
+- pandas==0.24
 
 # Installation
 DeepCDR can be downloaded by
@@ -37,6 +40,8 @@ Three types of raw data are required to generate genomic mutation matrix, gene e
 `CCLE_RRBS_TSS_1kb_20180614.txt` - DNA methylation profile from CCLE database
 
 The three types of raw data `genomic mutation file`, `gene expression file` and `DNA methylation file` can be downloaded from [CCLE database](https://depmap.org/portal/download/) or from our provided [Cloud Server](https://cloud.tsinghua.edu.cn/d/9b42762d8eef4f42a835/). 
+
+(Can search by file name from the depmap website)
 
 After data preprocessed, the three following preprocessed files will be in located in `data` folder.
 
