@@ -222,7 +222,7 @@ class MyCallback(Callback):
     def on_epoch_end(self, epoch, logs={}):
         y_pred_val = self.model.predict(self.x_val)
         pcc_val = pearsonr(self.y_val, y_pred_val[:,0])[0]
-        print 'pcc-val: %s' % str(round(pcc_val,4))
+        print('pcc-val: %s' % str(round(pcc_val,4)))
         if pcc_val > self.best:
             self.best = pcc_val
             self.wait = 0

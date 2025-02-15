@@ -252,7 +252,7 @@ class MyCallback(Callback):
         roc_val = roc_auc_score(self.y_val, y_pred_val)
         precision,recall,_, = metrics.precision_recall_curve(self.y_val,y_pred_val)
         pr_val = -np.trapz(precision,recall)
-        print 'roc-val: %.4f, pr-val:%.4f' % (roc_val,pr_val)
+        print('roc-val: %.4f, pr-val:%.4f' % (roc_val,pr_val))
         if roc_val > self.best:
             self.best = roc_val
 
