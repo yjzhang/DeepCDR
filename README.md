@@ -11,7 +11,7 @@ This work has been accepted to [ECCB2020](https://eccb2020.info/)([slides](https
 - python 2.7
 - Keras==2.1.4
 - TensorFlow==1.13.1
-- hickle >= 2.1.0
+- hickle==2.1.0
 - scikit-learn==0.20
 - pandas==0.24
 
@@ -88,6 +88,8 @@ python run_DeepCDR.py -gpu_id [gpu_id] -use_mut [use_mut] -use_gexp [use_gexp] -
 One can run `python run_DeepCDR.py -gpu_id 0 -use_mut True -use_gexp True -use_methy True` to implement the DeepCDR regression model.
 
 The trained model will be saved in `data/checkpoint` folder. The overall Pearson's correlation will be calculated.
+
+`Tested with 20 epochs - The overall Pearson's correlation is 0.9082.`
 
 ### DeepCDR classification model
 
