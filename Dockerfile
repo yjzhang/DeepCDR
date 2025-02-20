@@ -9,4 +9,4 @@ RUN pip install -r requirements.txt
 
 ADD . /DeepCDR
 
-#CMD ["python2", "run_prod.sh"]
+CMD ["sh", "run.sh"]

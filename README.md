@@ -135,20 +135,11 @@ Qiao Liu, Zhiqiang Hu, Rui Jiang, Mu Zhou, DeepCDR: a hybrid graph convolutional
 # License
 This project is licensed under the MIT License - see the LICENSE.md file for details
 
+## Running with Docker (yz)
 
+`docker build . -t DeepCDR`
 
-
-
-
-
-
-
-
-
-
-
-
-
+`docker run -v ./:/DeepCDR .`
 
 
 
