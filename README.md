@@ -139,7 +139,7 @@ This project is licensed under the MIT License - see the LICENSE.md file for det
 
 `docker build . -t DeepCDR`
 
-`docker run -v ./:/DeepCDR .`
+`docker run -v $(pwd):/DeepCDR deepcdr`
 
 
 
