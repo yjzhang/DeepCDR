@@ -34,9 +34,9 @@ import argparse
 ####################################Settings#################################
 parser = argparse.ArgumentParser(description='Drug_response_pre')
 parser.add_argument('-gpu_id', dest='gpu_id', type=str, default='0', help='GPU devices')
-parser.add_argument('-use_mut', dest='use_mut', type=bool, default=True, help='use gene mutation or not')
-parser.add_argument('-use_gexp', dest='use_gexp', type=bool, default=True, help='use gene expression or not')
-parser.add_argument('-use_methy', dest='use_methy', type=bool, default=True, help='use methylation or not')
+parser.add_argument('-no_use_mut', dest='use_mut', action='store_false', default=True, help='use gene mutation or not')
+parser.add_argument('-no_use_gexp', dest='use_gexp', action='store_false', default=True, help='use gene expression or not')
+parser.add_argument('-no_use_methy', dest='use_methy', action='store_false', default=True, help='use methylation or not')
 
 parser.add_argument('-israndom', dest='israndom', type=bool, default=False, help='randomlize X and A')
 #hyparameters for GCN
@@ -50,9 +50,12 @@ os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu_id
 use_mut,use_gexp,use_methy = args.use_mut,args.use_gexp, args.use_methy
 israndom=args.israndom
 model_suffix = ('with_mut' if use_mut else 'without_mut')+'_'+('with_gexp' if use_gexp else 'without_gexp')+'_'+('with_methy' if use_methy else 'without_methy')
+print(model_suffix)
 
 GCN_deploy = '_'.join(map(str,args.unit_list)) + '_'+('bn' if args.use_bn else 'no_bn')+'_'+('relu' if args.use_relu else 'tanh')+'_'+('GMP' if args.use_GMP else 'GAP')
 model_suffix = model_suffix + '_' +GCN_deploy
+
+# TODO: find some way to run the model only for testing and not for training.
 
 ####################################Constants Settings###########################
 TCGA_label_set = ["ALL","BLCA","BRCA","CESC","DLBC","LIHC","LUAD",
