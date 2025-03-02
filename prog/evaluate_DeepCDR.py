@@ -117,6 +117,7 @@ def MetadataGenerate(Drug_info_file, Cell_line_info_file, Genomic_mutation_file,
     drug_match_list=[item for item in experiment_data.index if item.split(':')[1] in drugid2pubchemid.keys()]
     experiment_data_filtered = experiment_data.loc[drug_match_list]
     
+    # data_idx: cell line name, pubchem id for drug, ic50, cancer type
     data_idx = []
     for each_drug in experiment_data_filtered.index:
         for each_cellline in experiment_data_filtered.columns:
@@ -266,6 +267,7 @@ def ModelEvaluate(model, X_drug_data_test, X_mutation_data_test, X_gexpr_data_te
     Y_pred = model.predict([X_drug_feat_data_test, X_drug_adj_data_test, X_mutation_data_test, X_gexpr_data_test, X_methylation_data_test])
     overall_pcc = pearsonr(Y_pred[:, 0], Y_test)[0]
     print("The overall Pearson's correlation is %.4f."%overall_pcc)
+    return Y_pred
     
 
 def main():
@@ -277,12 +279,10 @@ def main():
             custom_objects={'GraphLayer': GraphLayer,
                 'GraphConv': GraphConv})
 
-    mutation_feature, drug_feature, gexpr_feature, methylation_feature,  data_idx = MetadataGenerate(Drug_info_file, Cell_line_info_file, Genomic_mutation_file, Drug_feature_file, Gene_expression_file, Methylation_file, False)
+    mutation_feature, drug_feature, gexpr_feature, methylation_feature, data_idx = MetadataGenerate(Drug_info_file, Cell_line_info_file, Genomic_mutation_file, Drug_feature_file, Gene_expression_file, Methylation_file, False)
 
-    data_train_idx, data_test_idx = DataSplit(data_idx)
     #Extract features for training and test 
-    X_drug_data_train, X_mutation_data_train, X_gexpr_data_train, X_methylation_data_train, Y_train, cancer_type_train_list = FeatureExtract(data_train_idx, drug_feature, mutation_feature, gexpr_feature, methylation_feature)
-    X_drug_data_test, X_mutation_data_test, X_gexpr_data_test, X_methylation_data_test, Y_test, cancer_type_test_list = FeatureExtract(data_test_idx, drug_feature, mutation_feature, gexpr_feature, methylation_feature)
+    X_drug_data_test, X_mutation_data_test, X_gexpr_data_test, X_methylation_data_test, Y_test, cancer_type_test_list = FeatureExtract(data_idx, drug_feature, mutation_feature, gexpr_feature, methylation_feature)
 
     X_drug_feat_data_test = [item[0] for item in X_drug_data_test]
     X_drug_adj_data_test = [item[1] for item in X_drug_data_test]
@@ -292,10 +292,16 @@ def main():
     validation_data = [[X_drug_feat_data_test, X_drug_adj_data_test, X_mutation_data_test, X_gexpr_data_test, X_methylation_data_test], Y_test]
 
     print('Evaluating model...')
-    ModelEvaluate(model, X_drug_data_test, X_mutation_data_test, X_gexpr_data_test, X_methylation_data_test, Y_test, cancer_type_test_list, '%s/DeepCDR_%s.log'%(DPATH, model_suffix))
+    Y_pred = ModelEvaluate(model, X_drug_data_test, X_mutation_data_test, X_gexpr_data_test, X_methylation_data_test, Y_test, cancer_type_test_list, '%s/DeepCDR_%s.log'%(DPATH, model_suffix))
 
     # TODO: save results...
+    return data_idx, Y_pred
+    
 
 if __name__=='__main__':
-    main()
-    
+    data_idx, Y_pred = main()
+    # these are the results of testing on the same dataset as the training set...
+    data = [x+tuple(y) for x, y in zip(data_idx, Y_pred)]
+    df = pd.DataFrame(data)
+    df.columns = ['cell_line', 'pubchem_id', 'true_ic50', 'cancer', 'pred_ic50']
+    df.to_csv('prediction_results_test.csv')
