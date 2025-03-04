@@ -41,6 +41,10 @@ parser.add_argument('-no_use_mut', dest='use_mut', action='store_false', default
 parser.add_argument('-no_use_gexp', dest='use_gexp', action='store_false', default=True, help='use gene expression or not')
 parser.add_argument('-no_use_methy', dest='use_methy', action='store_false', default=True, help='use methylation or not')
 
+# test cancer (a cancer type to not use?)
+parser.add_argument('-test_cancer', dest='test_cancer', type=str, default='', help='Is there a cancer type to exclude from the training data?')
+
+
 parser.add_argument('-israndom', dest='israndom', type=bool, default=False, help='randomlize X and A')
 #hyparameters for GCN
 parser.add_argument('-unit_list', dest='unit_list', nargs='+', type=int, default=[256,256,256],help='unit list for GCN')
@@ -51,14 +55,18 @@ args = parser.parse_args()
 
 os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu_id
 use_mut, use_gexp, use_methy = args.use_mut, args.use_gexp, args.use_methy
+test_cancer = args.test_cancer
 israndom=args.israndom
 model_suffix = ('with_mut' if use_mut else 'without_mut')+'_'+('with_gexp' if use_gexp else 'without_gexp')+'_'+('with_methy' if use_methy else 'without_methy')
-print(model_suffix)
 
 GCN_deploy = '_'.join(map(str, args.unit_list)) + '_'+('bn' if args.use_bn else 'no_bn')+'_'+('relu' if args.use_relu else 'tanh')+'_'+('GMP' if args.use_GMP else 'GAP')
+
 model_suffix = model_suffix + '_' +GCN_deploy
 
-# TODO: find some way to run the model only for testing and not for training.
+if test_cancer:
+    model_suffix += '_' + test_cancer
+
+print(model_suffix)
 
 ####################################Constants Settings###########################
 TCGA_label_set = ["ALL", "BLCA", "BRCA", "CESC", "DLBC", "LIHC", "LUAD", 
@@ -264,13 +272,13 @@ def ModelEvaluate(model, X_drug_data_test, X_mutation_data_test, X_gexpr_data_te
     X_drug_adj_data_test = [item[1] for item in X_drug_data_test]
     X_drug_feat_data_test = np.array(X_drug_feat_data_test)#nb_instance * Max_stom * feat_dim
     X_drug_adj_data_test = np.array(X_drug_adj_data_test)#nb_instance * Max_stom * Max_stom    
-    Y_pred = model.predict([X_drug_feat_data_test, X_drug_adj_data_test, X_mutation_data_test, X_gexpr_data_test, X_methylation_data_test])
+    Y_pred = model.predict([X_drug_feat_data_test, X_drug_adj_data_test, X_mutation_data_test, X_gexpr_data_test])#, X_methylation_data_test])
     overall_pcc = pearsonr(Y_pred[:, 0], Y_test)[0]
     print("The overall Pearson's correlation is %.4f."%overall_pcc)
     return Y_pred
     
 
-def main():
+if __name__=='__main__':
     # TODO: 1. load model
     from layers.graph import GraphLayer, GraphConv
 
@@ -280,6 +288,10 @@ def main():
                 'GraphConv': GraphConv})
 
     mutation_feature, drug_feature, gexpr_feature, methylation_feature, data_idx = MetadataGenerate(Drug_info_file, Cell_line_info_file, Genomic_mutation_file, Drug_feature_file, Gene_expression_file, Methylation_file, False)
+
+    if test_cancer:
+        data_idx = [x for x in data_idx if x[3] == test_cancer]
+    print('Number of test points:', len(data_idx))
 
     #Extract features for training and test 
     X_drug_data_test, X_mutation_data_test, X_gexpr_data_test, X_methylation_data_test, Y_test, cancer_type_test_list = FeatureExtract(data_idx, drug_feature, mutation_feature, gexpr_feature, methylation_feature)
@@ -294,14 +306,9 @@ def main():
     print('Evaluating model...')
     Y_pred = ModelEvaluate(model, X_drug_data_test, X_mutation_data_test, X_gexpr_data_test, X_methylation_data_test, Y_test, cancer_type_test_list, '%s/DeepCDR_%s.log'%(DPATH, model_suffix))
 
-    # TODO: save results...
-    return data_idx, Y_pred
-    
 
-if __name__=='__main__':
-    data_idx, Y_pred = main()
     # these are the results of testing on the same dataset as the training set...
     data = [x+tuple(y) for x, y in zip(data_idx, Y_pred)]
     df = pd.DataFrame(data)
     df.columns = ['cell_line', 'pubchem_id', 'true_ic50', 'cancer', 'pred_ic50']
-    df.to_csv('prediction_results_test.csv')
+    df.to_csv('prediction_results_test_{0}.csv'.format(test_cancer))
