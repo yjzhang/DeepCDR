@@ -91,6 +91,8 @@ The trained model will be saved in `data/checkpoint` folder. The overall Pearson
 
 `Tested with 20 epochs - The overall Pearson's correlation is 0.9082.`
 
+`Without using methylation data, 20 epochs - The overall Pearson's correlation is 0.9092.`
+
 ### DeepCDR classification model
 
 ```python
@@ -140,14 +142,4 @@ This project is licensed under the MIT License - see the LICENSE.md file for det
 `docker build . -t DeepCDR`
 
 `docker run -v $(pwd):/DeepCDR deepcdr`
-
-
-
-
-
-
-
-
-
-
 
