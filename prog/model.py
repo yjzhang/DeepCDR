@@ -106,5 +106,5 @@ class KerasMultiSourceGCNModel(object):
             output = Dense(1,name='output')(x)
         else:
             output = Dense(1,activation = 'sigmoid',name='output')(x)
-        model  = Model(inputs=[drug_feat_input,drug_adj_input,mutation_input,gexpr_input,methy_input],outputs=output)  
-        return model    
+        model = Model(inputs=[drug_feat_input,drug_adj_input,mutation_input,gexpr_input,methy_input],outputs=output)
+        return model

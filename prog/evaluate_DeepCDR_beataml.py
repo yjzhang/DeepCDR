@@ -74,6 +74,7 @@ TCGA_label_set = ["ALL", "BLCA", "BRCA", "CESC", "DLBC", "LIHC", "LUAD",
                   "LUSC", "MESO", "MM", "NB", "OV", "PAAD", "SCLC", "SKCM",
                   "STAD", "THCA", 'COAD/READ']
 DPATH = '../data'
+# TODO: use BeatAML data here
 Drug_info_file = '%s/GDSC/1.Drug_listMon Jun 24 09_00_55 2019.csv'%DPATH
 Cell_line_info_file = '%s/CCLE/Cell_lines_annotations_20181226.txt'%DPATH
 Drug_feature_file = '%s/GDSC/drug_graph_feat'%DPATH

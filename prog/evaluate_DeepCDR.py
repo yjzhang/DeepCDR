@@ -209,10 +209,14 @@ def ModelEvaluate(model, X_drug_data_test, X_mutation_data_test, X_gexpr_data_te
     X_drug_adj_data_test = [item[1] for item in X_drug_data_test]
     X_drug_feat_data_test = np.array(X_drug_feat_data_test)#nb_instance * Max_stom * feat_dim
     X_drug_adj_data_test = np.array(X_drug_adj_data_test)#nb_instance * Max_stom * Max_stom    
+    X = [X_drug_feat_data_test, X_drug_adj_data_test]
+    if use_mut:
+        X.append(X_mutation_data_test)
+    if use_gexp:
+        X.append(X_gexpr_data_test)
     if use_methy:
-        Y_pred = model.predict([X_drug_feat_data_test, X_drug_adj_data_test, X_mutation_data_test, X_gexpr_data_test, X_methylation_data_test])
-    else:
-        Y_pred = model.predict([X_drug_feat_data_test, X_drug_adj_data_test, X_mutation_data_test, X_gexpr_data_test])#, X_methylation_data_test])
+        X.append(X_methylation_data_test)
+    Y_pred = model.predict(X)
     overall_pcc = pearsonr(Y_pred[:, 0], Y_test)[0]
     print("The overall Pearson's correlation is %.4f."%overall_pcc)
     return Y_pred
