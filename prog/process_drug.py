@@ -41,3 +41,22 @@ for _, row in smiles_data.iterrows():
 	degree_list = mol_object[0].deg_list
 	adj_list = mol_object[0].canon_adj_list
 	hkl.dump([features, adj_list,degree_list],'%s/%s.hkl'%(save_dir, row.cid))
+
+# convert beatAML
+drug_smiles_file = '../data/beataml_smiles.csv'
+save_dir = '../data/beataml/drug_graph_feat'
+smiles_data = pd.read_csv(drug_smiles_file)
+if not os.path.exists(save_dir):
+    os.makedirs(save_dir)
+molecules = []
+for _, row in smiles_data.iterrows():
+	smiles = row.canonical_smiles
+	print(row.cid)
+	molecules=[]
+	molecules.append(Chem.MolFromSmiles(smiles))
+	featurizer = dc.feat.graph_features.ConvMolFeaturizer()
+	mol_object = featurizer.featurize(datapoints=molecules)
+	features = mol_object[0].atom_features
+	degree_list = mol_object[0].deg_list
+	adj_list = mol_object[0].canon_adj_list
+	hkl.dump([features, adj_list,degree_list],'%s/%s.hkl'%(save_dir, row.cid))
