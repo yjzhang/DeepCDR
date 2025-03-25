@@ -76,3 +76,42 @@ plt.title('Predicted vs true IC50 for all cancers, all drugs')
 plt.text(5, -4, 'Pearson R: ' + str(round(corr, 2)))
 plt.savefig('ic50_test_5.png')
 plt.cla()
+
+# gexp only
+data = pd.read_csv('prediction_results_test_without_mut_with_gexp_without_methy_256_256_256_bn_relu_GAP.csv', index_col=0)
+data_subset = data
+print('Pearson correlation for all cancers, test set:', pearsonr(data_subset.true_ic50, data_subset.pred_ic50))
+corr = pearsonr(data_subset.true_ic50, data_subset.pred_ic50)[0]
+plt.scatter(data_subset.true_ic50, data_subset.pred_ic50, s=1)
+plt.xlabel('True IC50')
+plt.ylabel('Predicted IC50')
+plt.title('Predicted vs true IC50 - Gene Expression only')
+plt.text(5, -4, 'Pearson R: ' + str(round(corr, 2)))
+plt.savefig('ic50_test_gexp_only.png')
+plt.cla()
+
+# mut only
+data = pd.read_csv('prediction_results_test_with_mut_without_gexp_without_methy_256_256_256_bn_relu_GAP.csv', index_col=0)
+data_subset = data
+print('Pearson correlation for all cancers, test set:', pearsonr(data_subset.true_ic50, data_subset.pred_ic50))
+corr = pearsonr(data_subset.true_ic50, data_subset.pred_ic50)[0]
+plt.scatter(data_subset.true_ic50, data_subset.pred_ic50, s=1)
+plt.xlabel('True IC50')
+plt.ylabel('Predicted IC50')
+plt.title('Predicted vs true IC50 - Mutation only')
+plt.text(5, -4, 'Pearson R: ' + str(round(corr, 2)))
+plt.savefig('ic50_test_mut_only.png')
+plt.cla()
+
+# methy only
+data = pd.read_csv('prediction_results_test_without_mut_without_gexp_with_methy_256_256_256_bn_relu_GAP.csv', index_col=0)
+data_subset = data
+print('Pearson correlation for all cancers, test set:', pearsonr(data_subset.true_ic50, data_subset.pred_ic50))
+corr = pearsonr(data_subset.true_ic50, data_subset.pred_ic50)[0]
+plt.scatter(data_subset.true_ic50, data_subset.pred_ic50, s=1)
+plt.xlabel('True IC50')
+plt.ylabel('Predicted IC50')
+plt.title('Predicted vs true IC50 - Methylation only')
+plt.text(5, -4, 'Pearson R: ' + str(round(corr, 2)))
+plt.savefig('ic50_test_methy_only.png')
+plt.cla()
