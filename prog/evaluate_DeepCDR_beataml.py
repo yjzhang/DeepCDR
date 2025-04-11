@@ -166,14 +166,14 @@ def FeatureExtract(data_idx, drug_feature, gexpr_feature):
     gexpr_data = np.zeros((nb_instance, nb_gexpr_features), dtype='float32') 
     target = np.zeros(nb_instance, dtype='float32')
     for idx in range(nb_instance):
-        cell_line_id, pubchem_id, cancer_type = data_idx[idx]
+        cell_line_id, pubchem_id = data_idx[idx]
         #modify
         feat_mat, adj_list, _ = drug_feature[str(pubchem_id)]
         #fill drug data, padding to the same size with zeros
         drug_data[idx] = CalculateGraphFeat(feat_mat, adj_list)
         #randomlize X A
         gexpr_data[idx, :] = gexpr_feature.loc[cell_line_id].values
-        cancer_type_list.append([cancer_type, cell_line_id, pubchem_id])
+        cancer_type_list.append([cell_line_id, pubchem_id])
     return drug_data, gexpr_data, target, cancer_type_list
     
 
@@ -196,35 +196,32 @@ if __name__=='__main__':
     from layers.graph import GraphLayer, GraphConv
 
     print('Loading model...')
-    model = load_model('../checkpoint/MyBestDeepCDR_DeepCDR_{0}.h5'.format(model_suffix),
+    model = load_model('../checkpoint/MyBestDeepCDR_{0}.h5'.format(model_suffix),
             custom_objects={'GraphLayer': GraphLayer,
                 'GraphConv': GraphConv})
 
-    for drug_path in ['1', '2', '3', '4', '5', '6', '789']:
-        Drug_feature_file = '../data/new_drugs/' + drug_path
-        drug_feature, gexpr_feature, data_idx = generate_test_data(Drug_info_file, Drug_feature_file, Gene_expression_file)
+    Drug_feature_file = '../data/beataml/drug_graph_feat' 
+    drug_feature, gexpr_feature, data_idx = generate_test_data(Drug_info_file, Drug_feature_file, Gene_expression_file)
 
-        if test_cancer:
-            data_idx = [x for x in data_idx if x[3] == test_cancer]
-        print('Number of test points:', len(data_idx))
+    print('Number of test points:', len(data_idx))
 
-        #Extract features for training and test 
-        X_drug_data_test, X_gexpr_data_test, Y_test, cancer_type_test_list = FeatureExtract(data_idx, drug_feature, gexpr_feature) 
+    #Extract features for training and test 
+    X_drug_data_test, X_gexpr_data_test, Y_test, cancer_type_test_list = FeatureExtract(data_idx, drug_feature, gexpr_feature) 
 
-        X_drug_feat_data_test = [item[0] for item in X_drug_data_test]
-        X_drug_adj_data_test = [item[1] for item in X_drug_data_test]
-        X_drug_feat_data_test = np.array(X_drug_feat_data_test)#nb_instance * Max_stom * feat_dim
-        X_drug_adj_data_test = np.array(X_drug_adj_data_test)#nb_instance * Max_stom * Max_stom  
-        
-        validation_data = [[X_drug_feat_data_test, X_drug_adj_data_test, X_gexpr_data_test], Y_test]
+    X_drug_feat_data_test = [item[0] for item in X_drug_data_test]
+    X_drug_adj_data_test = [item[1] for item in X_drug_data_test]
+    X_drug_feat_data_test = np.array(X_drug_feat_data_test)#nb_instance * Max_stom * feat_dim
+    X_drug_adj_data_test = np.array(X_drug_adj_data_test)#nb_instance * Max_stom * Max_stom  
+    
+    validation_data = [[X_drug_feat_data_test, X_drug_adj_data_test, X_gexpr_data_test], Y_test]
 
-        print('Evaluating model...')
-        Y_pred = ModelEvaluate(model, X_drug_data_test, X_gexpr_data_test, Y_test)
+    print('Evaluating model...')
+    Y_pred = ModelEvaluate(model, X_drug_data_test, X_gexpr_data_test, Y_test)
 
 
-        # these are the results of testing on the same dataset as the training set...
-        data = [x+tuple(y) for x, y in zip(data_idx, Y_pred)]
-        df = pd.DataFrame(data)
-        df.columns = ['cell_line', 'pubchem_id', 'cancer', 'pred_ic50']
-        df.to_csv('prediction_results_new_drugs_test_{0}.csv'.format(drug_path))
+    # these are the results of testing on the same dataset as the training set...
+    data = [x+tuple(y) for x, y in zip(data_idx, Y_pred)]
+    df = pd.DataFrame(data)
+    df.columns = ['cell_line', 'pubchem_id', 'pred_ic50']
+    df.to_csv('prediction_results_beataml_tes.csv')
 
