@@ -66,45 +66,32 @@ model_suffix = model_suffix + '_' +GCN_deploy
 if test_cancer:
     model_suffix += '_' + test_cancer
 
+model_suffix = 'without_mut_with_gexp_without_methy_256_256_256_bn_relu_GAP_beataml'
+
 print(model_suffix)
 
 ####################################Constants Settings###########################
-TCGA_label_set = ["ALL", "BLCA", "BRCA", "CESC", "DLBC", "LIHC", "LUAD", 
-                  "ESCA", "GBM", "HNSC", "KIRC", "LAML", "LCML", "LGG", 
-                  "LUSC", "MESO", "MM", "NB", "OV", "PAAD", "SCLC", "SKCM",
-                  "STAD", "THCA", 'COAD/READ']
 DPATH = '../data'
 
+# TODO: evaluate for BeatAML
+
 Drug_info_file = '%s/beataml_smiles.csv'%DPATH
-Cell_line_info_file = '%s/CCLE/Cell_lines_annotations_20181226.txt'%DPATH
-Drug_feature_file = '%s/new_drugs/1'%DPATH
-Genomic_mutation_file = '%s/CCLE/genomic_mutation_34673_demap_features.csv'%DPATH
-Cancer_response_exp_file = '%s/CCLE/GDSC_IC50.csv'%DPATH
-Gene_expression_file = '%s/CCLE/genomic_expression_561celllines_697genes_demap_features.csv'%DPATH
-Methylation_file = '%s/CCLE/genomic_methylation_561celllines_808genes_demap_features.csv'%DPATH
+
+Drug_feature_file = '%s/beataml/drug_graph_feat'%DPATH
+#Genomic_mutation_file = '%s/CCLE/genomic_mutation_34673_demap_features.csv'%DPATH
+Cancer_response_exp_file = '%s/beataml/drug_response.csv'%DPATH
+Gene_expression_file = '%s/beataml/gene_exp.csv'%DPATH
+#Methylation_file = '%s/CCLE/genomic_methylation_561celllines_808genes_demap_features.csv'%DPATH
 Max_atoms = 100
 
 
-def generate_test_data(Drug_info_file, Cell_line_info_file, Genomic_mutation_file, Drug_feature_file, Gene_expression_file, Methylation_file):
+def generate_test_data(Drug_info_file, Drug_feature_file, Gene_expression_file):
     """
     """
-    # TODO: generate data that doesn't have ground truth IC50 values
+    # TODO: generate data from beatAML data
     #drug_id --> pubchem_id
-    pubchem_ids = pd.read_csv(Drug_info_file)
-    pubchem_ids = pubchem_ids.cid
-
-    #map cellline --> cancer type
-    cellline2cancertype ={}
-    for line in open(Cell_line_info_file).readlines()[1:]:
-        cellline_id = line.split('\t')[1]
-        TCGA_label = line.strip().split('\t')[-1]
-        #if TCGA_label in TCGA_label_set:
-        cellline2cancertype[cellline_id] = TCGA_label
 
     #load demap cell lines genomic mutation features
-    mutation_feature = pd.read_csv(Genomic_mutation_file, sep=',', header=0, index_col=[0])
-    cell_line_id_set = list(mutation_feature.index)
-
     # load drug features
     drug_pubchem_id_set = []
     drug_feature = {}
@@ -119,21 +106,15 @@ def generate_test_data(Drug_info_file, Cell_line_info_file, Genomic_mutation_fil
     #load gene expression faetures
     gexpr_feature = pd.read_csv(Gene_expression_file, sep=',', header=0, index_col=[0])
     
-    #only keep overlapped cell lines
-    mutation_feature = mutation_feature.loc[list(gexpr_feature.index)]
-    
-    #load methylation 
-    methylation_feature = pd.read_csv(Methylation_file, sep=',', header=0, index_col=[0])
-    assert methylation_feature.shape[0]==gexpr_feature.shape[0]==mutation_feature.shape[0]        
     # data_idx: cell line name, pubchem id for drug, cancer type
     data_idx = []
     for pubchem_id in drug_pubchem_id_set:
         for each_cellline in gexpr_feature.index:
-            data_idx.append((each_cellline, pubchem_id, cellline2cancertype[each_cellline])) 
+            data_idx.append((each_cellline, pubchem_id, )) 
     nb_celllines = len(set([item[0] for item in data_idx]))
     nb_drugs = len(set([item[1] for item in data_idx]))
     print('%d instances across %d cell lines and %d drugs were generated.'%(len(data_idx), nb_celllines, nb_drugs))
-    return mutation_feature, drug_feature, gexpr_feature, methylation_feature, data_idx
+    return drug_feature, gexpr_feature, data_idx
 
 
 def NormalizeAdj(adj):
@@ -177,16 +158,12 @@ def CalculateGraphFeat(feat_mat, adj_list):
     return [feat, adj_mat]
 
 
-def FeatureExtract(data_idx, drug_feature, mutation_feature, gexpr_feature, methylation_feature):
+def FeatureExtract(data_idx, drug_feature, gexpr_feature):
     cancer_type_list = []
     nb_instance = len(data_idx)
-    nb_mutation_feature = mutation_feature.shape[1]
     nb_gexpr_features = gexpr_feature.shape[1]
-    nb_methylation_features = methylation_feature.shape[1]
     drug_data = [[] for item in range(nb_instance)]
-    mutation_data = np.zeros((nb_instance, 1,  nb_mutation_feature, 1), dtype='float32')
     gexpr_data = np.zeros((nb_instance, nb_gexpr_features), dtype='float32') 
-    methylation_data = np.zeros((nb_instance, nb_methylation_features), dtype='float32') 
     target = np.zeros(nb_instance, dtype='float32')
     for idx in range(nb_instance):
         cell_line_id, pubchem_id, cancer_type = data_idx[idx]
@@ -195,25 +172,19 @@ def FeatureExtract(data_idx, drug_feature, mutation_feature, gexpr_feature, meth
         #fill drug data, padding to the same size with zeros
         drug_data[idx] = CalculateGraphFeat(feat_mat, adj_list)
         #randomlize X A
-        mutation_data[idx, 0, :, 0] = mutation_feature.loc[cell_line_id].values
         gexpr_data[idx, :] = gexpr_feature.loc[cell_line_id].values
-        methylation_data[idx, :] = methylation_feature.loc[cell_line_id].values
         cancer_type_list.append([cancer_type, cell_line_id, pubchem_id])
-    return drug_data, mutation_data, gexpr_data, methylation_data, target, cancer_type_list
+    return drug_data, gexpr_data, target, cancer_type_list
     
 
-def ModelEvaluate(model, X_drug_data_test, X_mutation_data_test, X_gexpr_data_test, X_methylation_data_test, Y_test):
+def ModelEvaluate(model, X_drug_data_test, X_gexpr_data_test, Y_test):
     X_drug_feat_data_test = [item[0] for item in X_drug_data_test]
     X_drug_adj_data_test = [item[1] for item in X_drug_data_test]
     X_drug_feat_data_test = np.array(X_drug_feat_data_test)#nb_instance * Max_stom * feat_dim
     X_drug_adj_data_test = np.array(X_drug_adj_data_test)#nb_instance * Max_stom * Max_stom    
     X = [X_drug_feat_data_test, X_drug_adj_data_test]
-    if use_mut:
-        X.append(X_mutation_data_test)
     if use_gexp:
         X.append(X_gexpr_data_test)
-    if use_methy:
-        X.append(X_methylation_data_test)
     Y_pred = model.predict(X)
     overall_pcc = pearsonr(Y_pred[:, 0], Y_test)[0]
     print("The overall Pearson's correlation is %.4f."%overall_pcc)
@@ -225,30 +196,30 @@ if __name__=='__main__':
     from layers.graph import GraphLayer, GraphConv
 
     print('Loading model...')
-    model = load_model('../checkpoint/best_DeepCDR_{0}.h5'.format(model_suffix),
+    model = load_model('../checkpoint/MyBestDeepCDR_DeepCDR_{0}.h5'.format(model_suffix),
             custom_objects={'GraphLayer': GraphLayer,
                 'GraphConv': GraphConv})
 
     for drug_path in ['1', '2', '3', '4', '5', '6', '789']:
         Drug_feature_file = '../data/new_drugs/' + drug_path
-        mutation_feature, drug_feature, gexpr_feature, methylation_feature, data_idx = generate_test_data(Drug_info_file, Cell_line_info_file, Genomic_mutation_file, Drug_feature_file, Gene_expression_file, Methylation_file)
+        drug_feature, gexpr_feature, data_idx = generate_test_data(Drug_info_file, Drug_feature_file, Gene_expression_file)
 
         if test_cancer:
             data_idx = [x for x in data_idx if x[3] == test_cancer]
         print('Number of test points:', len(data_idx))
 
         #Extract features for training and test 
-        X_drug_data_test, X_mutation_data_test, X_gexpr_data_test, X_methylation_data_test, Y_test, cancer_type_test_list = FeatureExtract(data_idx, drug_feature, mutation_feature, gexpr_feature, methylation_feature)
+        X_drug_data_test, X_gexpr_data_test, Y_test, cancer_type_test_list = FeatureExtract(data_idx, drug_feature, gexpr_feature) 
 
         X_drug_feat_data_test = [item[0] for item in X_drug_data_test]
         X_drug_adj_data_test = [item[1] for item in X_drug_data_test]
         X_drug_feat_data_test = np.array(X_drug_feat_data_test)#nb_instance * Max_stom * feat_dim
         X_drug_adj_data_test = np.array(X_drug_adj_data_test)#nb_instance * Max_stom * Max_stom  
         
-        validation_data = [[X_drug_feat_data_test, X_drug_adj_data_test, X_mutation_data_test, X_gexpr_data_test, X_methylation_data_test], Y_test]
+        validation_data = [[X_drug_feat_data_test, X_drug_adj_data_test, X_gexpr_data_test], Y_test]
 
         print('Evaluating model...')
-        Y_pred = ModelEvaluate(model, X_drug_data_test, X_mutation_data_test, X_gexpr_data_test, X_methylation_data_test, Y_test)
+        Y_pred = ModelEvaluate(model, X_drug_data_test, X_gexpr_data_test, Y_test)
 
 
         # these are the results of testing on the same dataset as the training set...
