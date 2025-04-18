@@ -91,6 +91,12 @@ def generate_test_data(Drug_info_file, Drug_feature_file, Gene_expression_file):
     # TODO: generate data from beatAML data
     #drug_id --> pubchem_id
 
+    # TODO: name to pubchem id
+    drug_info_data = pd.read_csv(Drug_info_file, index_col=0)
+    name_to_cid = {i: r.cid for i, r in drug_info_data.iterrows()}
+    cid_to_name = {r.cid: i for i, r in drug_info_data.iterrows()}
+    print(cid_to_name)
+
     #load demap cell lines genomic mutation features
     # load drug features
     drug_pubchem_id_set = []
@@ -107,10 +113,21 @@ def generate_test_data(Drug_info_file, Drug_feature_file, Gene_expression_file):
     gexpr_feature = pd.read_csv(Gene_expression_file, sep=',', header=0, index_col=[0])
     
     # data_idx: cell line name, pubchem id for drug, cancer type
+    # load cancer response file
+    cancer_responses = pd.read_csv(Cancer_response_exp_file, sep=',', index_col=0)
+    cancer_responses.index = cancer_responses.index.str.split().map(lambda x: x[0])
+
     data_idx = []
     for pubchem_id in drug_pubchem_id_set:
-        for each_cellline in gexpr_feature.index:
-            data_idx.append((each_cellline, pubchem_id, )) 
+        if int(pubchem_id) not in cid_to_name:
+            continue
+        chem_name = cid_to_name[int(pubchem_id)]
+        for cell_line in gexpr_feature.index:
+            if cell_line not in cancer_responses.columns:
+                continue
+            true_response = cancer_responses.loc[chem_name, cell_line]
+            if not pd.isna(true_response):
+                data_idx.append((cell_line, pubchem_id, true_response)) 
     nb_celllines = len(set([item[0] for item in data_idx]))
     nb_drugs = len(set([item[1] for item in data_idx]))
     print('%d instances across %d cell lines and %d drugs were generated.'%(len(data_idx), nb_celllines, nb_drugs))
@@ -164,9 +181,10 @@ def FeatureExtract(data_idx, drug_feature, gexpr_feature):
     nb_gexpr_features = gexpr_feature.shape[1]
     drug_data = [[] for item in range(nb_instance)]
     gexpr_data = np.zeros((nb_instance, nb_gexpr_features), dtype='float32') 
-    target = np.zeros(nb_instance, dtype='float32')
+    true_responses = []
     for idx in range(nb_instance):
-        cell_line_id, pubchem_id = data_idx[idx]
+        cell_line_id, pubchem_id, true_response = data_idx[idx]
+        true_responses.append(true_response)
         #modify
         feat_mat, adj_list, _ = drug_feature[str(pubchem_id)]
         #fill drug data, padding to the same size with zeros
@@ -174,7 +192,8 @@ def FeatureExtract(data_idx, drug_feature, gexpr_feature):
         #randomlize X A
         gexpr_data[idx, :] = gexpr_feature.loc[cell_line_id].values
         cancer_type_list.append([cell_line_id, pubchem_id])
-    return drug_data, gexpr_data, target, cancer_type_list
+    true_responses = np.array(true_responses)
+    return drug_data, gexpr_data, true_responses
     
 
 def ModelEvaluate(model, X_drug_data_test, X_gexpr_data_test, Y_test):
@@ -206,7 +225,8 @@ if __name__=='__main__':
     print('Number of test points:', len(data_idx))
 
     #Extract features for training and test 
-    X_drug_data_test, X_gexpr_data_test, Y_test, cancer_type_test_list = FeatureExtract(data_idx, drug_feature, gexpr_feature) 
+    X_drug_data_test, X_gexpr_data_test, Y_test = FeatureExtract(data_idx, drug_feature, gexpr_feature) 
+    print('Y_test:', Y_test)
 
     X_drug_feat_data_test = [item[0] for item in X_drug_data_test]
     X_drug_adj_data_test = [item[1] for item in X_drug_data_test]
@@ -220,8 +240,9 @@ if __name__=='__main__':
 
 
     # these are the results of testing on the same dataset as the training set...
+    # TODO: 
     data = [x+tuple(y) for x, y in zip(data_idx, Y_pred)]
     df = pd.DataFrame(data)
-    df.columns = ['cell_line', 'pubchem_id', 'pred_ic50']
-    df.to_csv('prediction_results_beataml_tes.csv')
+    df.columns = ['cell_line', 'pubchem_id', 'true_ic50', 'pred_ic50']
+    df.to_csv('prediction_results_beataml_test.csv')
 

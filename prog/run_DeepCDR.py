@@ -61,6 +61,7 @@ model_suffix = model_suffix + '_' +GCN_deploy
 if test_cancer:
     model_suffix += '_' + test_cancer
 
+model_suffix += '_beataml'
 print(model_suffix)
 # TODO: find some way to run the model only for testing and not for training.
 
@@ -75,7 +76,8 @@ Cell_line_info_file = '%s/CCLE/Cell_lines_annotations_20181226.txt'%DPATH
 Drug_feature_file = '%s/GDSC/drug_graph_feat'%DPATH
 Genomic_mutation_file = '%s/CCLE/genomic_mutation_34673_demap_features.csv'%DPATH
 Cancer_response_exp_file = '%s/CCLE/GDSC_IC50.csv'%DPATH
-Gene_expression_file = '%s/CCLE/genomic_expression_561celllines_697genes_demap_features.csv'%DPATH
+#Gene_expression_file = '%s/CCLE/genomic_expression_561celllines_697genes_demap_features.csv'%DPATH
+Gene_expression_file = '%s/CCLE/genomic_expression_561celllines_632genes_demap_features_beataml.csv'%DPATH
 Methylation_file = '%s/CCLE/genomic_methylation_561celllines_808genes_demap_features.csv'%DPATH
 Max_atoms = 100
 
