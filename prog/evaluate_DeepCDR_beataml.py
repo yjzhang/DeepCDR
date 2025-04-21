@@ -125,7 +125,8 @@ def generate_test_data(Drug_info_file, Drug_feature_file, Gene_expression_file):
         for cell_line in gexpr_feature.index:
             if cell_line not in cancer_responses.columns:
                 continue
-            true_response = cancer_responses.loc[chem_name, cell_line]
+            # take the log-IC50
+            true_response = np.log(cancer_responses.loc[chem_name, cell_line])
             if not pd.isna(true_response):
                 data_idx.append((cell_line, pubchem_id, true_response)) 
     nb_celllines = len(set([item[0] for item in data_idx]))

@@ -115,3 +115,17 @@ plt.title('Predicted vs true IC50 - Methylation only')
 plt.text(5, -4, 'Pearson R: ' + str(round(corr, 2)))
 plt.savefig('ic50_test_methy_only.png')
 plt.cla()
+
+# gexp only
+data = pd.read_csv('prediction_results_beataml_test.csv', index_col=0)
+data_subset = data
+print('Pearson correlation for BeatAML, test set:', pearsonr(data_subset.true_ic50, data_subset.pred_ic50))
+corr = pearsonr(data_subset.true_ic50, data_subset.pred_ic50)[0]
+plt.scatter(data_subset.true_ic50, data_subset.pred_ic50, s=1)
+plt.xlabel('True IC50')
+plt.ylabel('Predicted IC50')
+plt.title('Predicted vs true IC50 - BeatAML, Gene Expression only')
+plt.text(5, -4, 'Pearson R: ' + str(round(corr, 2)))
+plt.savefig('ic50_test_beataml.png')
+plt.cla()
+
