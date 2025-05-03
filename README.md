@@ -41,7 +41,7 @@ Three types of raw data are required to generate genomic mutation matrix, gene e
 
 The three types of raw data `genomic mutation file`, `gene expression file` and `DNA methylation file` can be downloaded from [CCLE database](https://depmap.org/portal/download/) or from our provided [Cloud Server](https://cloud.tsinghua.edu.cn/d/9b42762d8eef4f42a835/). 
 
-(Can search by file name from the depmap website)
+(Can search by file name from the depmap website - version: DepMap Public 19Q2)
 
 After data preprocessed, the three following preprocessed files will be in located in `data` folder.
 
