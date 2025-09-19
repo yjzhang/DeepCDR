@@ -1,6 +1,11 @@
+#!/usr/bin/env python
+
 import pandas as pd
 from scipy.stats import pearsonr
 import matplotlib.pyplot as plt
+
+import matplotlib
+matplotlib.rcParams["font.size"] = 15
 
 data = pd.read_csv('prediction_results_test.csv', index_col=0)
 print(data.cancer.unique())
@@ -11,7 +16,8 @@ plt.xlabel('True IC50')
 plt.ylabel('Model IC50')
 plt.title('Predicted vs true IC50 for all drugs and cell lines')
 plt.text(5, -4, 'Pearson R: ' + str(round(corr, 2)))
-plt.savefig('ic50_train.png')
+plt.tight_layout()
+plt.savefig('ic50_train.png', dpi=300)
 plt.cla()
 
 # ovarian cancer
@@ -23,7 +29,8 @@ plt.xlabel('True IC50')
 plt.ylabel('Model IC50')
 plt.title('Predicted vs true IC50 for ovarian cancer, all drugs')
 plt.text(5, -4, 'Pearson R: ' + str(round(corr, 2)))
-plt.savefig('ic50_train_ov.png')
+plt.tight_layout()
+plt.savefig('ic50_train_ov.png', dpi=300)
 plt.cla()
 
 # pancreatic cancer
@@ -35,7 +42,8 @@ plt.xlabel('True IC50')
 plt.ylabel('Model IC50')
 plt.title('Predicted vs true IC50 for pancreatic cancer, all drugs')
 plt.text(5, -4, 'Pearson R: ' + str(round(corr, 2)))
-plt.savefig('ic50_train_pd.png')
+plt.tight_layout()
+plt.savefig('ic50_train_pd.png', dpi=300)
 plt.cla()
 
 # pancreatic cancer test
@@ -48,7 +56,8 @@ plt.xlabel('True IC50')
 plt.ylabel('Predicted IC50')
 plt.title('Predicted vs true IC50 for pancreatic cancer, all drugs')
 plt.text(5, -4, 'Pearson R: ' + str(round(corr, 2)))
-plt.savefig('ic50_test_PAAD.png')
+plt.tight_layout()
+plt.savefig('ic50_test_PAAD.png', dpi=300)
 plt.cla()
 
 # OV cancer test
@@ -61,7 +70,8 @@ plt.xlabel('True IC50')
 plt.ylabel('Predicted IC50')
 plt.title('Predicted vs true IC50 for ovarian cancer, all drugs')
 plt.text(5, -4, 'Pearson R: ' + str(round(corr, 2)))
-plt.savefig('ic50_test_OV.png')
+plt.tight_layout()
+plt.savefig('ic50_test_OV.png', dpi=300)
 plt.cla()
 
 # all cancers test
@@ -72,9 +82,10 @@ corr = pearsonr(data_subset.true_ic50, data_subset.pred_ic50)[0]
 plt.scatter(data_subset.true_ic50, data_subset.pred_ic50, s=1)
 plt.xlabel('True IC50')
 plt.ylabel('Predicted IC50')
-plt.title('Predicted vs true IC50 for all cancers, all drugs')
+plt.title('Predicted vs true IC50')
 plt.text(5, -4, 'Pearson R: ' + str(round(corr, 2)))
-plt.savefig('ic50_test_5.png')
+plt.tight_layout()
+plt.savefig('ic50_test_5.png', dpi=300)
 plt.cla()
 
 # gexp only
@@ -87,7 +98,8 @@ plt.xlabel('True IC50')
 plt.ylabel('Predicted IC50')
 plt.title('Predicted vs true IC50 - Gene Expression only')
 plt.text(5, -4, 'Pearson R: ' + str(round(corr, 2)))
-plt.savefig('ic50_test_gexp_only.png')
+plt.tight_layout()
+plt.savefig('ic50_test_gexp_only.png', dpi=300)
 plt.cla()
 
 # mut only
@@ -100,7 +112,8 @@ plt.xlabel('True IC50')
 plt.ylabel('Predicted IC50')
 plt.title('Predicted vs true IC50 - Mutation only')
 plt.text(5, -4, 'Pearson R: ' + str(round(corr, 2)))
-plt.savefig('ic50_test_mut_only.png')
+plt.tight_layout()
+plt.savefig('ic50_test_mut_only.png', dpi=300)
 plt.cla()
 
 # methy only
@@ -113,7 +126,8 @@ plt.xlabel('True IC50')
 plt.ylabel('Predicted IC50')
 plt.title('Predicted vs true IC50 - Methylation only')
 plt.text(5, -4, 'Pearson R: ' + str(round(corr, 2)))
-plt.savefig('ic50_test_methy_only.png')
+plt.tight_layout()
+plt.savefig('ic50_test_methy_only.png', dpi=300)
 plt.cla()
 
 # gexp only
@@ -126,6 +140,7 @@ plt.xlabel('True IC50')
 plt.ylabel('Predicted IC50')
 plt.title('Predicted vs true IC50 - BeatAML, Gene Expression only')
 plt.text(5, -4, 'Pearson R: ' + str(round(corr, 2)))
-plt.savefig('ic50_test_beataml.png')
+plt.tight_layout()
+plt.savefig('ic50_test_beataml.png', dpi=300)
 plt.cla()
 
