@@ -66,7 +66,7 @@ model_suffix = model_suffix + '_' +GCN_deploy
 if test_cancer:
     model_suffix += '_' + test_cancer
 
-model_suffix = 'without_mut_with_gexp_without_methy_256_256_256_bn_relu_GAP_beataml'
+model_suffix = 'without_mut_with_gexp_without_methy_256_256_256_bn_relu_GAP_beataml_14042genes'
 
 print(model_suffix)
 
@@ -80,7 +80,7 @@ Drug_info_file = '%s/beataml_smiles.csv'%DPATH
 Drug_feature_file = '%s/beataml/drug_graph_feat'%DPATH
 #Genomic_mutation_file = '%s/CCLE/genomic_mutation_34673_demap_features.csv'%DPATH
 Cancer_response_exp_file = '%s/beataml/drug_response.csv'%DPATH
-Gene_expression_file = '%s/beataml/gene_exp.csv'%DPATH
+Gene_expression_file = '%s/beataml/gene_exp_14042_genes.csv'%DPATH
 #Methylation_file = '%s/CCLE/genomic_methylation_561celllines_808genes_demap_features.csv'%DPATH
 Max_atoms = 100
 
@@ -245,5 +245,5 @@ if __name__=='__main__':
     data = [x+tuple(y) for x, y in zip(data_idx, Y_pred)]
     df = pd.DataFrame(data)
     df.columns = ['cell_line', 'pubchem_id', 'true_ic50', 'pred_ic50']
-    df.to_csv('prediction_results_beataml_test.csv')
+    df.to_csv('prediction_results_beataml_test_14042_genes.csv')
 
